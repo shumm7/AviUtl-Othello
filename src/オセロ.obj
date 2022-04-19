@@ -26,9 +26,9 @@
 
 ☆　テスト環境　☆
 　AviUtl 1.10
-	exedit 0.93rc1
+	exedit 0.92
 	rikky_module 0.1.delta
-	shu_game.lua v1.0
+	textmodule 1.3.4
 
 ☆　遊び方　☆
 	オセロをタイムラインに置いたら、画面にオセロの盤面が表示されているかを確認してください。
@@ -79,7 +79,9 @@
 　[2021-07-09] 0.1: 初版
   [2021-07-09] 0.2: CPU対戦モードを追加
   [2021-07-09] 0.3: 座標・回転・拡大率の処理を追加
-	[2021-07-11] 0.4: 一部関数をライブラリ化
+  [2021-07-11] 0.4: 一部関数をライブラリ化
+  [2022-03-23] 1.0: 不具合を修正、トラックバーの表示方法を変更
+	[2022-04-20] 1.1: shu_game.luaを自動ダウンロードするように変更。
 ]]
 
 
@@ -100,8 +102,34 @@ _OTHELLO_CPU_SEARCH_DEPTH = math.floor(cpu_think_depth)  --探索深さ
 _OTHELLO_CPU_MIN_THINKTIME = cpu_think_time  --CPUの待機時間
 _OTHELLO_EVAL_FUNC_RANDOM = false  --評価値に乱数を付与
 
-require("rikky_module")
-local lib = dofile(_OTHELLO_LIB_FILE_DIR.."shu_game.lua")
+
+local rikky_module = require("rikky_module")
+local tm = require("textmodule")
+
+
+--shu_game.luaの読み込み
+local shu_game_dir = _OTHELLO_LIB_FILE_DIR.."shu_game.lua"
+
+if tm.fs.exists(_OTHELLO_DATA_FILE_DIR)==false then
+  tm.fs.create_all(_OTHELLO_DATA_FILE_DIR)
+end
+
+local function download()
+  tm.fs.write(shu_game_dir,
+    tm.http.get("https://raw.githubusercontent.com/shumm7/AviUtl-shu_game.lua/main/src/shu_game/shu_game.lua")
+  )
+  return
+end
+
+if (not tm.fs.exists(shu_game_dir)) then
+  return download()
+end
+if(pcall(dofile(shu_game_dir))) then
+  return download()
+end
+local lib = dofile(shu_game_dir)
+--ここまで
+
 
 local objpos, objrot = {x=obj.x, y=obj.y, z=obj.z}, {rx=obj.getvalue("rx"), ry=obj.getvalue("ry"), rz=obj.getvalue("rz")}
 local zoom = obj.getvalue("zoom")/100
@@ -188,9 +216,7 @@ local function saveBoardData(_b)
 	end
 	str = str.._OTHELLO_CURRENT_TURN
 
-	fh=io.open(_OTHELLO_DATA_FILE_DIR..data..".txt", "w+")
-	fh:write(str)
-	fh:close()
+  tm.fs.write(_OTHELLO_DATA_FILE_DIR..data..".txt", str)
 end
 
 local function drawBoard(_b)
@@ -579,7 +605,7 @@ local function showInformation()
 end
 
 
-if obj.check0 or io.open(_OTHELLO_DATA_FILE_DIR..data..".txt", "r")==nil then
+if obj.check0 or tm.fs.exists(_OTHELLO_DATA_FILE_DIR..data..".txt")==false then
 	saveBoardData(boardInit())
 	resetCPUPlacedTimer()
 end
