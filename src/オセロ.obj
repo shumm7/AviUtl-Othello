@@ -110,18 +110,18 @@ local tm = require("textmodule")
 --shu_game.luaÇÃì«Ç›çûÇ›
 local shu_game_dir = _OTHELLO_LIB_FILE_DIR.."shu_game.lua"
 
-if tm.fs.exists(_OTHELLO_DATA_FILE_DIR)==false then
-  tm.fs.create_all(_OTHELLO_DATA_FILE_DIR)
+if tm.filesystem.exists(_OTHELLO_DATA_FILE_DIR)==false then
+  tm.filesystem.create_all(_OTHELLO_DATA_FILE_DIR)
 end
 
 local function download()
-  tm.fs.write(shu_game_dir,
+  tm.filesystem.write(shu_game_dir,
     tm.http.get("https://raw.githubusercontent.com/shumm7/AviUtl-shu_game.lua/main/src/shu_game/shu_game.lua")
   )
   return
 end
 
-if (not tm.fs.exists(shu_game_dir)) then
+if (not tm.filesystem.exists(shu_game_dir)) then
   return download()
 end
 if(pcall(dofile(shu_game_dir))) then
@@ -216,7 +216,7 @@ local function saveBoardData(_b)
 	end
 	str = str.._OTHELLO_CURRENT_TURN
 
-  tm.fs.write(_OTHELLO_DATA_FILE_DIR..data..".txt", str)
+  tm.filesystem.write(_OTHELLO_DATA_FILE_DIR..data..".txt", str)
 end
 
 local function drawBoard(_b)
@@ -605,7 +605,7 @@ local function showInformation()
 end
 
 
-if obj.check0 or tm.fs.exists(_OTHELLO_DATA_FILE_DIR..data..".txt")==false then
+if obj.check0 or tm.filesystem.exists(_OTHELLO_DATA_FILE_DIR..data..".txt")==false then
 	saveBoardData(boardInit())
 	resetCPUPlacedTimer()
 end
